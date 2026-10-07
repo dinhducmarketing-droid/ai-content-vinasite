@@ -1,0 +1,14 @@
+/* AI Content Vinasite — admin */
+#acv-metabox .acv-status { margin: 8px 0; min-height: 18px; font-size: 12px; }
+#acv-metabox .acv-meta ul { margin: 6px 0; font-size: 12px; }
+#acv-metabox .acv-meta li { margin: 2px 0; word-break: break-word; }
+#acv-metabox .acv-preview {
+    border: 1px solid #dcdcde; background: #fff; padding: 10px;
+    max-height: 360px; overflow: auto; margin: 8px 0; font-size: 13px; line-height: 1.5;
+}
+#acv-metabox .acv-preview h2 { font-size: 15px; margin: 12px 0 4px; }
+#acv-metabox .acv-preview h3 { font-size: 13px; margin: 10px 0 2px; }
+.acv-ok { color: #1a7f37; font-weight: 600; }
+.acv-warn { color: #b32d2e; font-weight: 600; }
+#acv-test-result { margin-left: 8px; }
+.acv-wrap textarea.code { font-family: Consolas, Monaco, monospace; font-size: 12px; }
