@@ -210,6 +210,30 @@ class ACV_Image
         return isset($m[$size]) ? $m[$size] : 'square_hd';
     }
 
+    /**
+     * Tạo ảnh từ prompt → sideload → đặt làm ảnh đại diện của bài.
+     * @return array{id:int,url:string,cost:float}|WP_Error
+     */
+    public static function generate_and_attach($post_id, $prompt, $alt = '', $slug = '')
+    {
+        $post_id = (int) $post_id;
+        if (!$post_id) return new WP_Error('no_post', 'Thiếu bài viết.');
+
+        $gen = self::generate($prompt);
+        if (is_wp_error($gen)) return $gen;
+
+        $post  = get_post($post_id);
+        $slug  = $slug ?: ($post ? $post->post_name : '');
+        $slug  = $slug ?: ($post ? sanitize_title(get_the_title($post)) : 'ai-image');
+        $alt   = $alt !== '' ? $alt : ($post ? get_the_title($post) : '');
+
+        $att = self::sideload($gen['b64'], $post_id, $alt, '', $slug, $gen['mime']);
+        if (is_wp_error($att)) return $att;
+
+        set_post_thumbnail($post_id, $att);
+        return array('id' => (int) $att, 'url' => wp_get_attachment_url($att), 'cost' => isset($gen['cost']) ? $gen['cost'] : 0.0);
+    }
+
     /** Sideload base64 → Media Library. @return int attachment_id|WP_Error */
     public static function sideload($b64, $post_id, $alt, $caption, $slug, $mime = 'image/png')
     {

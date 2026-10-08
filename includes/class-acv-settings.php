@@ -57,6 +57,22 @@ class ACV_Settings
             'hotline'     => '08 8686 3838',
             'brand_voice' => 'chuyên nghiệp, uy tín, đáng tin cậy',
             'enable_faq'  => 1,
+            // ---- Tạo ảnh minh hoạ (fal.ai / OpenAI) ----
+            'image_enable'       => 0,
+            'image_provider'     => 'fal',
+            'fal_api_key'        => '',
+            'fal_model'          => 'fal-ai/flux/dev',
+            'fal_endpoint'       => '',
+            'openai_api_key'     => '',
+            'image_model'        => 'dall-e-3',
+            'image_size'         => '1792x1024',
+            'image_preset'       => 'photo',
+            'image_style'        => '',
+            'image_direction'    => '',
+            'watermark_enable'   => 0,
+            'watermark_logo'     => '',
+            'watermark_position' => 'bottom-right',
+            'watermark_size'     => 18,
             'profiles'    => array(
                 'kho_mau' => array(
                     'label'      => 'Kho mẫu (kho_mau)',
@@ -130,6 +146,25 @@ class ACV_Settings
         $out['brand_voice'] = isset($input['brand_voice']) ? sanitize_text_field($input['brand_voice']) : $out['brand_voice'];
         $out['enable_faq']  = !empty($input['enable_faq']) ? 1 : 0;
 
+        // ---- Ảnh minh hoạ ----
+        $out['image_enable']   = !empty($input['image_enable']) ? 1 : 0;
+        $out['image_provider'] = (isset($input['image_provider']) && $input['image_provider'] === 'openai') ? 'openai' : 'fal';
+        $out['fal_api_key']    = isset($input['fal_api_key']) ? trim(sanitize_text_field($input['fal_api_key'])) : '';
+        $out['fal_model']      = (isset($input['fal_model']) && isset(ACV_Image::$fal_models[$input['fal_model']])) ? $input['fal_model'] : $out['fal_model'];
+        $out['fal_endpoint']   = isset($input['fal_endpoint']) ? esc_url_raw(trim($input['fal_endpoint'])) : '';
+        $out['openai_api_key'] = isset($input['openai_api_key']) ? trim(sanitize_text_field($input['openai_api_key'])) : '';
+        $out['image_model']    = (isset($input['image_model']) && isset(ACV_Image::$models[$input['image_model']])) ? $input['image_model'] : $out['image_model'];
+        $out['image_size']     = (isset($input['image_size']) && isset(ACV_Image::$sizes[$input['image_size']])) ? $input['image_size'] : $out['image_size'];
+        $presets = ACV_Image::presets();
+        $out['image_preset']     = (isset($input['image_preset']) && isset($presets[$input['image_preset']])) ? $input['image_preset'] : '';
+        $out['image_style']      = isset($input['image_style']) ? sanitize_text_field($input['image_style']) : '';
+        $out['image_direction']  = isset($input['image_direction']) ? sanitize_text_field($input['image_direction']) : '';
+        $out['watermark_enable'] = !empty($input['watermark_enable']) ? 1 : 0;
+        $out['watermark_logo']   = isset($input['watermark_logo']) ? esc_url_raw(trim($input['watermark_logo'])) : '';
+        $wm_pos = array('bottom-right', 'bottom-left', 'top-right', 'top-left', 'center');
+        $out['watermark_position'] = (isset($input['watermark_position']) && in_array($input['watermark_position'], $wm_pos, true)) ? $input['watermark_position'] : 'bottom-right';
+        $out['watermark_size']     = isset($input['watermark_size']) ? max(5, min(60, (int) $input['watermark_size'])) : 18;
+
         if (!empty($input['profiles']) && is_array($input['profiles'])) {
             foreach ($out['profiles'] as $key => &$p) {
                 if (empty($input['profiles'][$key])) continue;
@@ -177,6 +212,107 @@ class ACV_Settings
                     <tr>
                         <th><label>FAQ + Schema (AI Overviews)</label></th>
                         <td><label><input type="checkbox" name="acv_settings[enable_faq]" value="1" <?php checked($s['enable_faq'], 1); ?>> Sinh FAQ &amp; xuất schema FAQPage qua Rank Math</label></td>
+                    </tr>
+                </table>
+
+                <h2>Tạo ảnh minh hoạ cho bài <small>(fal.ai / OpenAI)</small></h2>
+                <table class="form-table">
+                    <tr>
+                        <th><label>Bật tạo ảnh</label></th>
+                        <td>
+                            <label><input type="checkbox" name="acv_settings[image_enable]" value="1" <?php checked($s['image_enable'], 1); ?>> Khi tạo nội dung, AI gợi ý thêm prompt ảnh khớp bài; bấm 1 nút để sinh ảnh &amp; đặt làm ảnh đại diện.</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label>Nguồn tạo ảnh</label></th>
+                        <td>
+                            <select name="acv_settings[image_provider]">
+                                <option value="fal" <?php selected($s['image_provider'], 'fal'); ?>>fal.ai (FLUX) — khuyên dùng</option>
+                                <option value="openai" <?php selected($s['image_provider'], 'openai'); ?>>OpenAI (DALL·E / gpt-image-1)</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label>fal.ai API key</label></th>
+                        <td>
+                            <input type="password" name="acv_settings[fal_api_key]" value="<?php echo esc_attr($s['fal_api_key']); ?>" class="regular-text" autocomplete="off" placeholder="key fal.ai">
+                            <p class="description">Lấy tại <code>fal.ai/dashboard/keys</code>. Để trống nếu dùng OpenAI.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label>Model fal.ai</label></th>
+                        <td>
+                            <select name="acv_settings[fal_model]">
+                                <?php foreach (ACV_Image::$fal_models as $mid => $ml) : ?>
+                                    <option value="<?php echo esc_attr($mid); ?>" <?php selected($s['fal_model'], $mid); ?>><?php echo esc_html($ml); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label>fal.ai endpoint (tuỳ chọn)</label></th>
+                        <td>
+                            <input type="text" name="acv_settings[fal_endpoint]" value="<?php echo esc_attr($s['fal_endpoint']); ?>" class="regular-text" placeholder="https://fal.run (hoặc proxy Worker)">
+                            <p class="description">Để trống = gọi thẳng <code>https://fal.run</code>. Điền nếu bạn dùng Cloudflare Worker trung gian.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label>OpenAI API key (nếu chọn OpenAI)</label></th>
+                        <td><input type="password" name="acv_settings[openai_api_key]" value="<?php echo esc_attr($s['openai_api_key']); ?>" class="regular-text" autocomplete="off" placeholder="sk-..."></td>
+                    </tr>
+                    <tr>
+                        <th><label>Kích thước ảnh</label></th>
+                        <td>
+                            <select name="acv_settings[image_size]">
+                                <?php foreach (ACV_Image::$sizes as $sid => $sl) : ?>
+                                    <option value="<?php echo esc_attr($sid); ?>" <?php selected($s['image_size'], $sid); ?>><?php echo esc_html($sl); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <span style="margin-left:12px">Model OpenAI:
+                                <select name="acv_settings[image_model]">
+                                    <?php foreach (ACV_Image::$models as $mid => $ml) : ?>
+                                        <option value="<?php echo esc_attr($mid); ?>" <?php selected($s['image_model'], $mid); ?>><?php echo esc_html($ml); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label>Phong cách ảnh</label></th>
+                        <td>
+                            <select name="acv_settings[image_preset]">
+                                <?php foreach (ACV_Image::presets() as $pk => $pv) : ?>
+                                    <option value="<?php echo esc_attr($pk); ?>" <?php selected($s['image_preset'], $pk); ?>><?php echo esc_html($pv['label']); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <p class="description">Preset ghép vào mọi prompt ảnh. "Ảnh chụp thật" hợp web dịch vụ/sản phẩm.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label>Phong cách tuỳ chỉnh</label></th>
+                        <td><input type="text" name="acv_settings[image_style]" value="<?php echo esc_attr($s['image_style']); ?>" class="large-text" placeholder="vd: warm tone, minimal background, brand color xanh dương"></td>
+                    </tr>
+                    <tr>
+                        <th><label>Hướng dẫn chung</label></th>
+                        <td><input type="text" name="acv_settings[image_direction]" value="<?php echo esc_attr($s['image_direction']); ?>" class="large-text" placeholder="vd: no text, no watermark, high detail"></td>
+                    </tr>
+                    <tr>
+                        <th><label>Đóng logo (watermark)</label></th>
+                        <td>
+                            <label><input type="checkbox" name="acv_settings[watermark_enable]" value="1" <?php checked($s['watermark_enable'], 1); ?>> Đóng logo lên ảnh sau khi tạo</label>
+                            <p style="margin:8px 0 0">
+                                URL logo: <input type="text" name="acv_settings[watermark_logo]" value="<?php echo esc_attr($s['watermark_logo']); ?>" class="regular-text" placeholder="https://site/logo.png">
+                            </p>
+                            <p style="margin:8px 0 0">
+                                Vị trí:
+                                <select name="acv_settings[watermark_position]">
+                                    <?php foreach (array('bottom-right' => 'Dưới phải', 'bottom-left' => 'Dưới trái', 'top-right' => 'Trên phải', 'top-left' => 'Trên trái', 'center' => 'Giữa') as $wv => $wl) : ?>
+                                        <option value="<?php echo esc_attr($wv); ?>" <?php selected($s['watermark_position'], $wv); ?>><?php echo esc_html($wl); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                Cỡ (% bề ngang): <input type="number" min="5" max="60" name="acv_settings[watermark_size]" value="<?php echo esc_attr($s['watermark_size']); ?>" style="width:70px">
+                            </p>
+                        </td>
                     </tr>
                 </table>
 

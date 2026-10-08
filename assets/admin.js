@@ -19,6 +19,9 @@ jQuery(function ($) {
                 $('#acv-meta').html(r.data.meta);
                 $('#acv-preview').html(r.data.preview).show();
                 $('#acv-apply').show();
+                if (r.data.image_prompt && !$('#acv-img-prompt').val()) {
+                    $('#acv-img-prompt').val(r.data.image_prompt);
+                }
                 status('Đã tạo. Xem trước rồi bấm <strong>Áp dụng</strong>.');
             }).fail(function () { busy(false); status('<span class="acv-warn">Lỗi kết nối.</span>'); });
         });
@@ -43,6 +46,23 @@ jQuery(function ($) {
                     busy(false);
                     status(r.success ? '<span class="acv-ok">' + r.data + ' — tải lại trang.</span>' : '<span class="acv-warn">Lỗi: ' + r.data + '</span>');
                 }).fail(function () { busy(false); status('<span class="acv-warn">Lỗi kết nối.</span>'); });
+        });
+
+        // ---- Tạo ảnh đại diện ----
+        $('#acv-gen-image').on('click', function () {
+            var prompt = $.trim($('#acv-img-prompt').val());
+            if (!prompt) { $('#acv-img-status').html('<span class="acv-warn">Nhập prompt hoặc tạo nội dung trước.</span>'); return; }
+            busy(true);
+            $('#acv-img-status').html('Đang tạo ảnh… (10–30 giây)');
+            $('#acv-img-result').empty();
+            $.post(ajaxurl, {
+                action: 'acv_gen_image', post: postId, _n: ACV.nonce, prompt: prompt
+            }).done(function (r) {
+                busy(false);
+                if (!r.success) { $('#acv-img-status').html('<span class="acv-warn">Lỗi: ' + r.data + '</span>'); return; }
+                $('#acv-img-status').html('<span class="acv-ok">✓ Đã đặt làm ảnh đại diện (~$' + r.data.cost + '). Lưu/tải lại bài để thấy.</span>');
+                $('#acv-img-result').html('<img src="' + r.data.url + '?t=' + Date.now() + '" style="max-width:100%;height:auto;border:1px solid #dcdcde;margin-top:6px">');
+            }).fail(function () { busy(false); $('#acv-img-status').html('<span class="acv-warn">Lỗi kết nối.</span>'); });
         });
     }
 

@@ -16,8 +16,9 @@ class ACV_Generator
     public static function generate($post_id, $model_override = '')
     {
         $built  = ACV_Prompt::build($post_id);
-        $enable_faq = (bool) ACV_Settings::get('enable_faq');
-        $schema = ACV_Prompt::schema($enable_faq);
+        $enable_faq   = (bool) ACV_Settings::get('enable_faq');
+        $enable_image = (bool) ACV_Settings::get('image_enable');
+        $schema = ACV_Prompt::schema($enable_faq, $enable_image);
         $model  = $model_override ?: $built['profile']['model'];
 
         $res = ACV_API::generate($model, $built['system'], $built['user'], $schema);
@@ -30,6 +31,7 @@ class ACV_Generator
             'faq'              => ($enable_faq && !empty($d['faq']) && is_array($d['faq'])) ? $d['faq'] : array(),
             'cta_html'         => isset($d['cta_html']) ? $d['cta_html'] : '',
             'image_alt'        => isset($d['image_alt']) ? sanitize_text_field($d['image_alt']) : '',
+            'image_prompt'     => isset($d['image_prompt']) ? sanitize_textarea_field($d['image_prompt']) : '',
             'meta_title'       => isset($d['meta_title']) ? sanitize_text_field($d['meta_title']) : '',
             'meta_description' => isset($d['meta_description']) ? sanitize_text_field($d['meta_description']) : '',
             'profile'          => $built['key'],

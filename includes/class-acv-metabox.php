@@ -13,6 +13,7 @@ class ACV_Metabox
         add_action('wp_ajax_acv_apply', array(__CLASS__, 'ajax_apply'));
         add_action('wp_ajax_acv_revert', array(__CLASS__, 'ajax_revert'));
         add_action('wp_ajax_acv_test_key', array(__CLASS__, 'ajax_test'));
+        add_action('wp_ajax_acv_gen_image', array(__CLASS__, 'ajax_gen_image'));
     }
 
     public static function register()
@@ -64,6 +65,20 @@ class ACV_Metabox
                 <button type="button" class="button button-primary" id="acv-apply" style="display:none">✓ Áp dụng</button>
                 <button type="button" class="button" id="acv-revert" style="<?php echo $has_backup ? '' : 'display:none'; ?>">↩ Hoàn tác</button>
             </p>
+
+            <?php if (ACV_Settings::get('image_enable')) : ?>
+            <hr>
+            <div id="acv-img-section">
+                <p><strong>🖼 Ảnh đại diện</strong></p>
+                <label style="display:block;font-size:12px;color:#646970">Prompt ảnh (AI gợi ý theo bài, sửa được):</label>
+                <textarea id="acv-img-prompt" rows="3" style="width:100%" placeholder="Tạo nội dung trước để AI gợi ý prompt ảnh — hoặc tự nhập mô tả ảnh (tiếng Anh tốt nhất)."></textarea>
+                <p>
+                    <button type="button" class="button button-secondary" id="acv-gen-image">🖼 Tạo ảnh &amp; đặt làm đại diện</button>
+                </p>
+                <div id="acv-img-status" class="acv-status"></div>
+                <div id="acv-img-result" class="acv-img-result"></div>
+            </div>
+            <?php endif; ?>
         </div>
         <?php
     }
@@ -102,8 +117,34 @@ class ACV_Metabox
             . '</ul>';
 
         wp_send_json_success(array(
-            'preview' => wp_kses_post($payload['post_content']),
-            'meta'    => $meta,
+            'preview'      => wp_kses_post($payload['post_content']),
+            'meta'         => $meta,
+            'image_prompt' => isset($payload['image_prompt']) ? $payload['image_prompt'] : '',
+        ));
+    }
+
+    /** Tạo ảnh đại diện từ prompt (fal.ai/OpenAI) → set featured image. */
+    public static function ajax_gen_image()
+    {
+        $post_id = self::check($_POST['post'] ?? 0);
+        if (!ACV_Settings::get('image_enable')) wp_send_json_error('Tính năng tạo ảnh đang tắt.');
+
+        $prompt = isset($_POST['prompt']) ? sanitize_textarea_field(wp_unslash($_POST['prompt'])) : '';
+        $alt    = '';
+        // Lấy prompt / alt từ bản xem trước nếu ô prompt để trống.
+        $payload = get_transient('acv_prev_' . $post_id . '_' . get_current_user_id());
+        if (is_array($payload)) {
+            if ($prompt === '' && !empty($payload['image_prompt'])) $prompt = $payload['image_prompt'];
+            if (!empty($payload['image_alt'])) $alt = $payload['image_alt'];
+        }
+        if ($prompt === '') wp_send_json_error('Chưa có prompt ảnh. Tạo nội dung trước, hoặc tự nhập mô tả.');
+
+        $r = ACV_Image::generate_and_attach($post_id, $prompt, $alt);
+        if (is_wp_error($r)) wp_send_json_error($r->get_error_message());
+
+        wp_send_json_success(array(
+            'url'  => $r['url'],
+            'cost' => number_format($r['cost'], 4),
         ));
     }
 

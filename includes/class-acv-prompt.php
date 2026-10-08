@@ -26,6 +26,15 @@ class ACV_Prompt
             '{wmin}'        => $p['wmin'],
             '{wmax}'        => $p['wmax'],
         ));
+
+        // Khi bật tạo ảnh: yêu cầu mô hình trả thêm image_prompt KHỚP NGỮ CẢNH bài.
+        // Chèn động (không lưu trong profile) để mọi site đang chạy đều có, kể cả
+        // profile đã lưu từ trước.
+        if (!empty($s['image_enable'])) {
+            $sys .= "\n- image_prompt: MỘT prompt TIẾNG ANH mô tả ảnh minh hoạ khớp ĐÚNG chủ đề bài (suy ra từ tiêu đề + ngành + nội dung bạn vừa viết). "
+                . "Tả cảnh/chủ thể cụ thể, bối cảnh, góc máy và ánh sáng; phong cách ảnh chụp thật, chuyên nghiệp, phù hợp làm ảnh đại diện NGANG (16:9). "
+                . "TUYỆT ĐỐI không có chữ/text/typography/logo/watermark trong ảnh, không khung viền. Chỉ 1–3 câu súc tích.";
+        }
         $usr = strtr($p['user'], array(
             '{title}'      => $title,
             '{nganh}'      => $nganh,
@@ -38,7 +47,7 @@ class ACV_Prompt
     }
 
     /** JSON schema cho structured output. */
-    public static function schema($enable_faq = true)
+    public static function schema($enable_faq = true, $enable_image = false)
     {
         $props = array(
             'answer_summary'   => array('type' => 'string'),
@@ -49,6 +58,11 @@ class ACV_Prompt
             'meta_description' => array('type' => 'string'),
         );
         $required = array('answer_summary', 'content_html', 'cta_html', 'image_alt', 'meta_title', 'meta_description');
+
+        if ($enable_image) {
+            $props['image_prompt'] = array('type' => 'string');
+            $required[] = 'image_prompt';
+        }
 
         if ($enable_faq) {
             $props['faq'] = array(

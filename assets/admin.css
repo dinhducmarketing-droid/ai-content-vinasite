@@ -12,3 +12,7 @@
 .acv-warn { color: #b32d2e; font-weight: 600; }
 #acv-test-result { margin-left: 8px; }
 .acv-wrap textarea.code { font-family: Consolas, Monaco, monospace; font-size: 12px; }
+#acv-metabox #acv-img-section hr { margin: 12px 0; }
+#acv-metabox #acv-img-prompt { font-size: 12px; }
+#acv-metabox .acv-img-result img { border-radius: 4px; }
+#acv-metabox #acv-img-status { font-size: 12px; }
