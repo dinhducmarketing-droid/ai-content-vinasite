@@ -75,4 +75,21 @@ jQuery(function ($) {
                 $r.html(res.success ? '<span class="acv-ok">✓ ' + res.data + '</span>' : '<span class="acv-warn">✗ ' + res.data + '</span>');
             }).fail(function () { $r.html('<span class="acv-warn">✗ Lỗi kết nối.</span>'); });
     });
+
+    // ---- Test kết nối nguồn tạo ảnh (fal.ai / OpenAI) ----
+    $('#acv-test-image').on('click', function () {
+        var $r = $('#acv-test-image-result').text('Đang kiểm tra…');
+        var provider = $('select[name="acv_settings[image_provider]"]').val();
+        var key = (provider === 'openai')
+            ? $('input[name="acv_settings[openai_api_key]"]').val()
+            : $('input[name="acv_settings[fal_api_key]"]').val();
+        $.post(ajaxurl, {
+            action: 'acv_test_image', _n: ACV.nonce,
+            provider: provider, key: key,
+            model: $('select[name="acv_settings[fal_model]"]').val(),
+            endpoint: $('input[name="acv_settings[fal_endpoint]"]').val()
+        }).done(function (res) {
+            $r.html(res.success ? '<span class="acv-ok">✓ ' + res.data + '</span>' : '<span class="acv-warn">✗ ' + res.data + '</span>');
+        }).fail(function () { $r.html('<span class="acv-warn">✗ Lỗi kết nối.</span>'); });
+    });
 });

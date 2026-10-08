@@ -236,7 +236,9 @@ class ACV_Settings
                         <th><label>fal.ai API key</label></th>
                         <td>
                             <input type="password" name="acv_settings[fal_api_key]" value="<?php echo esc_attr($s['fal_api_key']); ?>" class="regular-text" autocomplete="off" placeholder="key fal.ai">
-                            <p class="description">Lấy tại <code>fal.ai/dashboard/keys</code>. Để trống nếu dùng OpenAI.</p>
+                            <button type="button" class="button" id="acv-test-image">Test kết nối</button>
+                            <span id="acv-test-image-result"></span>
+                            <p class="description">Lấy tại <code>fal.ai/dashboard/keys</code>. Để trống nếu dùng OpenAI. Nút test không tốn phí (không sinh ảnh).</p>
                         </td>
                     </tr>
                     <tr>

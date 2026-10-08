@@ -13,6 +13,7 @@ class ACV_Metabox
         add_action('wp_ajax_acv_apply', array(__CLASS__, 'ajax_apply'));
         add_action('wp_ajax_acv_revert', array(__CLASS__, 'ajax_revert'));
         add_action('wp_ajax_acv_test_key', array(__CLASS__, 'ajax_test'));
+        add_action('wp_ajax_acv_test_image', array(__CLASS__, 'ajax_test_image'));
         add_action('wp_ajax_acv_gen_image', array(__CLASS__, 'ajax_gen_image'));
     }
 
@@ -121,6 +122,19 @@ class ACV_Metabox
             'meta'         => $meta,
             'image_prompt' => isset($payload['image_prompt']) ? $payload['image_prompt'] : '',
         ));
+    }
+
+    /** Test kết nối nguồn tạo ảnh (fal.ai / OpenAI) với key đang gõ ở form. */
+    public static function ajax_test_image()
+    {
+        check_ajax_referer('acv_nonce', '_n');
+        if (!current_user_can('manage_options')) wp_send_json_error('Không đủ quyền.');
+        $provider = (isset($_POST['provider']) && $_POST['provider'] === 'openai') ? 'openai' : 'fal';
+        $key      = isset($_POST['key']) ? trim(sanitize_text_field(wp_unslash($_POST['key']))) : '';
+        $model    = isset($_POST['model']) ? sanitize_text_field(wp_unslash($_POST['model'])) : '';
+        $endpoint = isset($_POST['endpoint']) ? esc_url_raw(trim(wp_unslash($_POST['endpoint']))) : '';
+        $r = ACV_Image::test_key($provider, $key, $model, $endpoint);
+        is_wp_error($r) ? wp_send_json_error($r->get_error_message()) : wp_send_json_success('Kết nối OK, key dùng được.');
     }
 
     /** Tạo ảnh đại diện từ prompt (fal.ai/OpenAI) → set featured image. */

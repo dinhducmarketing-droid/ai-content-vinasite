@@ -263,10 +263,18 @@ class ACV_Image
         return (int) $attach_id;
     }
 
-    /** Test (chỉ OpenAI có endpoint free; fal thì thử bằng tạo ảnh thật). @return true|WP_Error */
-    public static function test()
+    /**
+     * Test kết nối theo nguồn đang chọn. Truyền key đang gõ ở form (chưa lưu).
+     * @return true|WP_Error
+     */
+    public static function test_key($provider, $key, $model = '', $endpoint = '')
     {
-        $key = trim((string) ACV_Settings::get('openai_api_key'));
+        return ($provider === 'openai') ? self::test_openai($key) : self::test_fal($key, $model, $endpoint);
+    }
+
+    private static function test_openai($key)
+    {
+        $key = trim((string) $key);
         if (!$key) return new WP_Error('no_openai', 'Chưa nhập OpenAI API key.');
         $res = wp_remote_get('https://api.openai.com/v1/models', array('timeout' => 20, 'headers' => array('Authorization' => 'Bearer ' . $key)));
         if (is_wp_error($res)) return $res;
@@ -274,5 +282,30 @@ class ACV_Image
         if ($code === 200) return true;
         $d = json_decode(wp_remote_retrieve_body($res), true);
         return new WP_Error('openai_error', isset($d['error']['message']) ? $d['error']['message'] : ('HTTP ' . $code));
+    }
+
+    /**
+     * Test key fal.ai KHÔNG tốn phí: gửi body thiếu prompt → nếu key sai trả
+     * 401/403, nếu key đúng trả 422 (lỗi validate, KHÔNG sinh ảnh).
+     */
+    private static function test_fal($key, $model = '', $endpoint = '')
+    {
+        $key = trim((string) $key);
+        if (!$key) return new WP_Error('no_fal', 'Chưa nhập fal.ai API key.');
+        $model = $model ?: (ACV_Settings::get('fal_model') ?: 'fal-ai/flux/schnell');
+        $base  = $endpoint ? untrailingslashit($endpoint) : 'https://fal.run';
+
+        $res = wp_remote_post($base . '/' . $model, array(
+            'timeout' => 25,
+            'headers' => array('Authorization' => 'Key ' . $key, 'content-type' => 'application/json'),
+            'body'    => wp_json_encode(array('__acv_test' => true)), // cố ý thiếu prompt
+        ));
+        if (is_wp_error($res)) return $res;
+        $code = wp_remote_retrieve_response_code($res);
+        if ($code === 401 || $code === 403) {
+            return new WP_Error('fal_auth', 'Key fal.ai không hợp lệ hoặc hết hạn (HTTP ' . $code . ').');
+        }
+        // 200 / 422 / 400 => auth đã qua, key dùng được.
+        return true;
     }
 }
