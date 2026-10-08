@@ -30,18 +30,6 @@ class ACV_Settings
 
     public static function defaults()
     {
-        $sys_kho = "Bạn là chuyên gia content SEO của Vinasite — công ty thiết kế website tại Việt Nam. "
-            . "Viết nội dung mô tả MẪU WEBSITE, tối ưu cho Google AI Overviews và SEO.\n"
-            . "QUY TẮC:\n"
-            . "- Văn phong: {brand_voice}. Tiếng Việt tự nhiên, câu ngắn, khẳng định, giàu dữ kiện (chuẩn SEO, responsive đa thiết bị, tốc độ tải nhanh, bàn giao nhanh).\n"
-            . "- content_html: MỞ ĐẦU bằng 1 đoạn TRẢ LỜI TRỰC TIẾP 2–3 câu (mẫu website [ngành] là gì, dành cho ai). Sau đó các mục H2 DẠNG CÂU HỎI: 'Đặc điểm nổi bật của mẫu website [ngành]?', 'Mẫu website này phù hợp với ai?', 'Ưu điểm kỹ thuật'. Dùng <p>, <h2>, <ul><li>. KHÔNG chèn FAQ, KHÔNG chèn CTA, KHÔNG dùng H1. Tổng {wmin}–{wmax} từ.\n"
-            . "- faq: 4–6 câu hỏi người dùng hay tìm (giá thiết kế, thời gian bàn giao, có tùy biến không, có hỗ trợ SEO/responsive không, có bàn giao mã nguồn không). Mỗi câu trả lời 40–60 từ, súc tích, trích dẫn được.\n"
-            . "- cta_html: 1 đoạn <p> kêu gọi liên hệ Vinasite, kèm hotline {hotline}. Biến tấu tự nhiên, không sáo rỗng.\n"
-            . "- image_alt: alt text chuẩn SEO cho ảnh đại diện, chứa ngành, < 125 ký tự.\n"
-            . "- meta_title ≤ 60 ký tự, meta_description 140–160 ký tự, có hotline {hotline}.\n"
-            . "- CHỈ trả về JSON đúng schema, không thêm lời dẫn.";
-        $usr_kho = "Mẫu website: {title}\nNgành: {nganh}\nDanh mục: {danh_muc}\nViết nội dung cho mẫu này.";
-
         $sys_prod = "Bạn là chuyên gia content SEO của Vinasite. Viết MÔ TẢ SẢN PHẨM tối ưu Google AI Overviews và SEO.\n"
             . "QUY TẮC:\n"
             . "- Văn phong: {brand_voice}. Câu ngắn, khẳng định, giàu dữ kiện, nêu lợi ích cụ thể.\n"
@@ -99,15 +87,6 @@ class ACV_Settings
             'watermark_position' => 'bottom-right',
             'watermark_size'     => 18,
             'profiles'    => array(
-                'kho_mau' => array(
-                    'label'      => 'Kho mẫu (kho_mau)',
-                    'post_types' => array('kho_mau'),
-                    'model'      => 'claude-sonnet-4-6',
-                    'wmin'       => 250,
-                    'wmax'       => 350,
-                    'system'     => $sys_kho,
-                    'user'       => $usr_kho,
-                ),
                 'product' => array(
                     'label'      => 'Sản phẩm (product)',
                     'post_types' => array('product'),
@@ -139,6 +118,9 @@ class ACV_Settings
         $out['profiles'] = isset($saved['profiles']) && is_array($saved['profiles'])
             ? $saved['profiles'] + $def['profiles']
             : $def['profiles'];
+        // Chỉ giữ các profile hiện có trong defaults → bỏ profile cũ đã gỡ
+        // (vd kho_mau) dù database site còn lưu từ trước.
+        $out['profiles'] = array_intersect_key($out['profiles'], $def['profiles']);
         return $out;
     }
 
@@ -149,7 +131,7 @@ class ACV_Settings
         return isset($all[$key]) ? $all[$key] : null;
     }
 
-    /** Trả về key profile ('kho_mau'/'product') khớp post type, hoặc false. */
+    /** Trả về key profile (product/post) khớp post type, hoặc false. */
     public static function profile_for_post_type($pt)
     {
         if (!$pt) return false;
