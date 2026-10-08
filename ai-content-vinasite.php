@@ -1,15 +1,18 @@
 <?php
 /**
  * Plugin Name: AI Content Vinasite
- * Description: Sinh nội dung SEO + tối ưu Google AI Overviews (GEO) cho sản phẩm & kho mẫu bằng Claude API. Answer-first, H2 câu hỏi, FAQ + schema (Rank Math), CTA, alt ảnh.
- * Version: 1.1.0
- * Author: Vinasite
+ * Plugin URI: https://github.com/dinhducmarketing-droid/ai-content-vinasite
+ * Description: Sinh nội dung SEO + tối ưu Google AI Overviews (GEO) cho sản phẩm & kho mẫu bằng Claude API. Answer-first, H2 câu hỏi, FAQ + schema (Rank Math), CTA, alt ảnh, tạo ảnh minh hoạ khớp bài qua fal.ai.
+ * Version: 1.1.1
+ * Author: VinaSite Việt Nam
+ * Author URI: https://vinasite.com.vn/
+ * Update URI: https://github.com/dinhducmarketing-droid/ai-content-vinasite
  * Text Domain: ai-content-vinasite
  */
 
 if (!defined('ABSPATH')) exit;
 
-define('ACV_VER', '1.1.0');
+define('ACV_VER', '1.1.1');
 define('ACV_FILE', __FILE__);
 define('ACV_DIR', plugin_dir_path(__FILE__));
 define('ACV_URL', plugin_dir_url(__FILE__));
@@ -24,6 +27,15 @@ require_once ACV_DIR . 'includes/class-acv-image.php';
 require_once ACV_DIR . 'includes/class-acv-metabox.php';
 
 register_activation_hook(__FILE__, array('ACV_Log', 'install'));
+
+// Tự cập nhật từ GitHub (repo Public → không cần token), giống theme VinaSite.
+require_once ACV_DIR . 'includes/plugin-update-checker/plugin-update-checker.php';
+$acv_update_checker = YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
+    'https://github.com/dinhducmarketing-droid/ai-content-vinasite/',
+    __FILE__,
+    'ai-content-vinasite'
+);
+$acv_update_checker->setBranch('main');
 
 add_action('plugins_loaded', function () {
     ACV_Settings::init();
