@@ -3,7 +3,7 @@
  * Plugin Name: AI Content Vinasite
  * Plugin URI: https://github.com/dinhducmarketing-droid/ai-content-vinasite
  * Description: Sinh nội dung SEO + tối ưu Google AI Overviews (GEO) cho sản phẩm & kho mẫu bằng Claude API. Answer-first, H2 câu hỏi, FAQ + schema (Rank Math), CTA, alt ảnh, tạo ảnh minh hoạ khớp bài qua fal.ai.
- * Version: 1.1.2
+ * Version: 1.1.3
  * Author: VinaSite Việt Nam
  * Author URI: https://vinasite.com.vn/
  * Update URI: https://github.com/dinhducmarketing-droid/ai-content-vinasite
@@ -12,7 +12,7 @@
 
 if (!defined('ABSPATH')) exit;
 
-define('ACV_VER', '1.1.2');
+define('ACV_VER', '1.1.3');
 define('ACV_FILE', __FILE__);
 define('ACV_DIR', plugin_dir_path(__FILE__));
 define('ACV_URL', plugin_dir_url(__FILE__));

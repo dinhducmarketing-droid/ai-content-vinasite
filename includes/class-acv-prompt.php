@@ -85,9 +85,17 @@ class ACV_Prompt
         );
     }
 
+    /** Taxonomy chứa "ngành/danh mục" theo loại nội dung. */
+    private static function tax_for($key)
+    {
+        if ($key === 'product') return 'product_cat';
+        if ($key === 'post')    return 'category';
+        return 'theme_cat'; // kho_mau
+    }
+
     private static function nganh($post, $key)
     {
-        $tax = ($key === 'product') ? 'product_cat' : 'theme_cat';
+        $tax = self::tax_for($key);
         $terms = wp_get_post_terms($post->ID, $tax);
         if (is_wp_error($terms) || !$terms) return '';
         $cat = '';
@@ -102,7 +110,7 @@ class ACV_Prompt
 
     private static function danh_muc($post, $key)
     {
-        $tax = ($key === 'product') ? 'product_cat' : 'theme_cat';
+        $tax = self::tax_for($key);
         $terms = wp_get_post_terms($post->ID, $tax, array('fields' => 'names'));
         if (is_wp_error($terms) || !$terms) return '';
         return implode(', ', array_map(function ($n) {

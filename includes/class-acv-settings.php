@@ -52,6 +52,31 @@ class ACV_Settings
             . "- CHỈ trả về JSON đúng schema.";
         $usr_prod = "Sản phẩm: {title}\nDanh mục: {danh_muc}\nGiá: {price}\nThuộc tính: {attributes}\nViết mô tả cho sản phẩm này.";
 
+        // ---- Bài viết (blog/tin tức/kiến thức/hướng dẫn/tư vấn) — chuẩn SEO Google 2026 ----
+        $sys_post = "Bạn là chuyên gia nội dung & SEO theo chuẩn Google 2026. Viết BÀI VIẾT hoàn chỉnh (tin tức, blog, kiến thức, hướng dẫn, tư vấn) có thể đăng ngay sau khi xác minh dữ kiện. KHÔNG áp dụng cho trang chủ, landing dịch vụ, trang sản phẩm hay danh mục.\n"
+            . "Văn phong: {brand_voice}; tiếng Việt tự nhiên, đúng chuyên ngành, không sáo rỗng kiểu AI, không lặp cấu trúc máy móc.\n"
+            . "NGUYÊN TẮC BẮT BUỘC:\n"
+            . "- Answer-first: 2–4 câu đầu trả lời TRỰC TIẾP nhu cầu chính, không mở bài vòng vo.\n"
+            . "- Cấu trúc theo Search Intent: câu trả lời chính → giải thích khái niệm/vấn đề → đặc điểm/nguyên nhân/điều kiện → lợi ích & hạn chế → hướng dẫn/quy trình/cách chọn → bảng so sánh hoặc checklist (nếu hữu ích) → sai lầm & rủi ro cần tránh → kết luận. Dùng <h2>, <h3>, <p>, <ul><li>, <table> khi THẬT cần; H2–H3 phân cấp logic, không nhảy cấp, không nhồi từ khóa. KHÔNG dùng <h1> (tiêu đề bài đã là H1). KHÔNG chèn FAQ và KHÔNG chèn CTA vào content_html (trả ở trường riêng).\n"
+            . "- E-E-A-T & minh bạch: chỉ dùng dữ kiện thật. TUYỆT ĐỐI không bịa tác giả, chuyên gia, số liệu, giá, chứng nhận, thành tích, case study, ngày tháng hay đánh giá. Thông tin chưa chắc chắn ghi rõ 'CHƯA XÁC MINH' ngay tại chỗ; không tự tạo dữ liệu.\n"
+            . "- Từ khóa tự nhiên ở tiêu đề/mở bài/nội dung; KHÔNG nhồi từ khóa, không tạo heading cho từng biến thể. Bao phủ thực thể, thuộc tính, thuật ngữ, nguyên nhân, giải pháp, điều kiện, ngoại lệ cần thiết.\n"
+            . "- Information Gain: thêm giá trị riêng (tiêu chí lựa chọn, quy trình, checklist, bảng so sánh, lưu ý thực tế) thay vì chỉ tổng hợp kiến thức đại trà.\n"
+            . "- Chỉ dùng <strong> cho kết luận/lưu ý/dữ kiện quan trọng; không bôi đậm từ khóa hàng loạt. Đoạn ngắn, mỗi đoạn một ý; giải thích thuật ngữ khó.\n"
+            . "- YMYL (luật/y tế/tài chính): không kết luận tuyệt đối; khuyến nghị tham khảo nguồn chính thống/người có chuyên môn.\n"
+            . "- Liên kết ngoài: chỉ dẫn nguồn chính thống khi cần kiểm chứng một dữ kiện cụ thể, không chèn link trang trí. KHÔNG bịa URL; nếu cần link nội bộ mà chưa có URL thật, ghi 'URL CẦN XÁC MINH'.\n"
+            . "- KHÔNG cam kết lên TOP, được index, Featured Snippet hay được AI Overview trích dẫn.\n"
+            . "- Viết HOÀN CHỈNH: không để dàn ý, dấu ba chấm, nội dung mẫu hay ghi chú chưa xử lý. Độ dài theo Search Intent, khoảng {wmin}–{wmax} từ, KHÔNG kéo dài chỉ để đủ số.\n"
+            . "TRƯỜNG XUẤT:\n"
+            . "- answer_summary: đoạn Answer-first 50–100 từ (dùng làm tóm tắt).\n"
+            . "- content_html: thân bài theo đúng cấu trúc trên.\n"
+            . "- faq: 3–6 câu hỏi NGƯỜI ĐỌC THỰC SỰ cần, đáp ngắn gọn trực tiếp 40–70 từ, không lặp lại toàn bài. Nếu bài không cần FAQ thì để mảng rỗng.\n"
+            . "- cta_html: 1 đoạn <p> CTA MỀM phù hợp intent (đọc thêm / xem dịch vụ / nhận tư vấn / liên hệ), kèm hotline {hotline} nếu hợp lý; không quảng cáo dày đặc.\n"
+            . "- image_alt: mô tả đúng nội dung ảnh, < 125 ký tự, không nhồi từ khóa.\n"
+            . "- meta_title: duy nhất, đúng intent, có từ khóa chính tự nhiên; mốc 50–60 ký tự; không giật tít/cam kết TOP.\n"
+            . "- meta_description: tóm tắt giá trị + bước tiếp theo; mốc 140–160 ký tự; không sao chép title.\n"
+            . "- CHỈ trả về JSON đúng schema, không thêm lời dẫn.";
+        $usr_post = "Chủ đề bài viết: {title}\nChuyên mục: {danh_muc}\nLĩnh vực: {nganh}\nViết bài viết hoàn chỉnh theo đúng tiêu chuẩn. Nếu thiếu dữ liệu để chắc chắn, vẫn viết các phần an toàn và ghi rõ 'CHƯA XÁC MINH' cho phần cần kiểm chứng, tuyệt đối không bịa.";
+
         return array(
             'api_key'     => '',
             'hotline'     => '08 8686 3838',
@@ -91,6 +116,15 @@ class ACV_Settings
                     'wmax'       => 220,
                     'system'     => $sys_prod,
                     'user'       => $usr_prod,
+                ),
+                'post' => array(
+                    'label'      => 'Bài viết (post)',
+                    'post_types' => array('post'),
+                    'model'      => 'claude-sonnet-4-6',
+                    'wmin'       => 700,
+                    'wmax'       => 1400,
+                    'system'     => $sys_post,
+                    'user'       => $usr_post,
                 ),
             ),
         );

@@ -21,7 +21,11 @@ class ACV_Generator
         $schema = ACV_Prompt::schema($enable_faq, $enable_image);
         $model  = $model_override ?: $built['profile']['model'];
 
-        $res = ACV_API::generate($model, $built['system'], $built['user'], $schema);
+        // Nới token đầu ra theo độ dài bài (bài viết dài cần nhiều hơn mặc định).
+        $wmax = (int) ($built['profile']['wmax'] ?? 350);
+        $max_tokens = max(3500, min(8000, $wmax * 4 + 800));
+
+        $res = ACV_API::generate($model, $built['system'], $built['user'], $schema, $max_tokens);
         if (is_wp_error($res)) return $res;
 
         $d = $res['data'];
@@ -73,9 +77,12 @@ class ACV_Generator
         $html   = $payload['post_content'];
         if ($html === '') { $issues[] = 'Nội dung rỗng'; return $issues; }
         if (strpos($html, '<h2') === false) $issues[] = 'Thiếu thẻ <h2>';
-        $hotline = ACV_Settings::get('hotline');
-        $hot_digits = preg_replace('/\D/', '', $hotline);
-        if ($hot_digits && strpos(preg_replace('/\D/', '', $html), $hot_digits) === false) $issues[] = 'Thiếu hotline';
+        // Bài viết: CTA mềm có thể không kèm hotline → không bắt buộc.
+        if (($payload['profile'] ?? '') !== 'post') {
+            $hotline = ACV_Settings::get('hotline');
+            $hot_digits = preg_replace('/\D/', '', $hotline);
+            if ($hot_digits && strpos(preg_replace('/\D/', '', $html), $hot_digits) === false) $issues[] = 'Thiếu hotline';
+        }
         if (preg_match('/\[(brand|ngành|nganh|tên|ten)\]/iu', $html)) $issues[] = 'Còn placeholder';
         $wc = self::word_count($html);
         if ($wc < $profile['wmin'] - 40) $issues[] = "Quá ngắn ($wc từ < {$profile['wmin']})";
